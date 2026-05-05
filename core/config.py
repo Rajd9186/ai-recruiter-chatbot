@@ -1,22 +1,49 @@
-from ollamafreeapi import OllamaFreeAPI
+import os
+from ollama import Client
 
-# Initialize client ONCE (singleton style)
-client = OllamaFreeAPI()
+# Initialize client once
+client = Client(
+    host="https://ollama.com",
+    headers={'Authorization': 'Bearer ' + os.getenv("OLLAMA_API_KEY")}
+)
+
+MODEL_NAME = "gpt-oss:120b-cloud"  # change if needed
 
 
-def llm(prompt: str, model: str = "llama2"):
+def llm(prompt: str, model: str = MODEL_NAME) -> str:
     """
-    Generic LLM function to generate responses
+    Non-streaming LLM response (for API use)
     """
-
     try:
         response = client.chat(
-            model_name=model,
-            prompt=prompt,
-            temperature=0.7,
-            num_predict=256
+            model=model,
+            messages=[
+                {"role": "user", "content": prompt}
+            ]
         )
-        return response
+        return response["message"]["content"]
 
     except Exception as e:
         return f"LLM Error: {str(e)}"
+
+
+def llm_stream(prompt: str, model: str = MODEL_NAME):
+    """
+    Streaming generator (for future use in frontend streaming)
+    """
+    try:
+        stream = client.chat(
+            model=model,
+            messages=[
+                {"role": "user", "content": prompt}
+            ],
+            stream=True
+        )
+
+        for part in stream:
+            content = part.get("message", {}).get("content", "")
+            if content:
+                yield content
+
+    except Exception as e:
+        yield f"LLM Error: {str(e)}"
