@@ -8,7 +8,7 @@ def get_vectorstore():
     global _vectorstore
 
     if _vectorstore is None:
-        text = load_markdown(r"C:\Users\rajde\source\repos\AgentJob\app\data\cv.md")
+        text = load_markdown(r"data\cv.md")
         embeddings = get_embeddings()
         _vectorstore = FAISS.from_texts([text], embeddings)
 
