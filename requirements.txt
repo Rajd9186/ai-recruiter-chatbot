@@ -3,7 +3,7 @@ uvicorn[standard]==0.27.1
 pydantic==2.13.3
 
 # LLM (choose one - currently using Google Gemini)
-ollama=0.6.2
+ollama==0.6.2
 
 # Optional (if you switch providers)
 openai==1.30.1
