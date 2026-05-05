@@ -1,0 +1,9 @@
+﻿from app.db.vector_store import get_vectorstore
+
+class RetrievalService:
+    def __init__(self):
+        self.vs = get_vectorstore()
+
+    def get_context(self, query: str):
+        docs = self.vs.similarity_search(query, k=3)
+        return "\n".join([d.page_content for d in docs])

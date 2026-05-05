@@ -1,0 +1,63 @@
+﻿from typing import Dict
+import logging
+import time
+from fastapi import FastAPI, Request
+from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import JSONResponse
+from fastapi.exceptions import RequestValidationError, HTTPException as FastAPIHTTPException
+from app.api.router import api_router
+
+logger = logging.getLogger("uvicorn.error")
+
+app = FastAPI(
+    title="Recruiter Chatbot API",
+    description="REST API for the Recruiter Chatbot service",
+    version="0.1.0",
+)
+
+# CORS - adjust origins for your deployment
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],  # <- replace with explicit origins in production
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+app.include_router(api_router)
+
+
+@app.on_event("startup")
+async def on_startup() -> None:
+    logger.info("Starting Recruiter Chatbot API")
+
+
+@app.on_event("shutdown")
+async def on_shutdown() -> None:
+    logger.info("Shutting down Recruiter Chatbot API")
+
+
+@app.exception_handler(FastAPIHTTPException)
+async def http_exception_handler(request: Request, exc: FastAPIHTTPException):
+    logger.warning("HTTP exception: %s %s", request.url, exc.detail)
+    return JSONResponse(status_code=exc.status_code, content={"detail": exc.detail})
+
+
+@app.exception_handler(RequestValidationError)
+async def validation_exception_handler(request: Request, exc: RequestValidationError):
+    logger.warning("Validation error: %s %s", request.url, exc.errors())
+    return JSONResponse(status_code=422, content={"detail": exc.errors()})
+
+
+@app.exception_handler(Exception)
+async def generic_exception_handler(request: Request, exc: Exception):
+    logger.exception("Unhandled exception while processing request: %s", request.url)
+    return JSONResponse(status_code=500, content={"detail": "Internal server error"})
+
+
+@app.get("/", response_model=Dict[str, str])
+def root() -> Dict[str, str]:
+    """
+    Lightweight root endpoint showing API status.
+    """
+    return {"message": "API running", "version": app.version}

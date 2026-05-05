@@ -1,0 +1,30 @@
+﻿from pathlib import Path
+
+from langchain.vectorstores import FAISS
+from langchain.text_splitter import CharacterTextSplitter
+
+from db.embeddings import get_embeddings
+from utils.markdown_parser import load_markdown
+
+_vectorstore = None
+
+
+def get_vectorstore():
+    global _vectorstore
+
+    if _vectorstore is None:
+        # Resolve data/cv.md relative to the project `app` directory
+        data_path = Path(__file__).resolve().parents[1] / "data" / "cv.md"
+        if not data_path.exists():
+            raise FileNotFoundError(f"CV file not found at '{data_path}'. Place 'cv.md' under the project's 'data' folder.")
+
+        text = load_markdown(str(data_path))
+
+        # Split into chunks for better embeddings
+        splitter = CharacterTextSplitter(chunk_size=1000, chunk_overlap=200)
+        texts = splitter.split_text(text)
+
+        embeddings = get_embeddings()
+        _vectorstore = FAISS.from_texts(texts, embeddings)
+
+    return _vectorstore

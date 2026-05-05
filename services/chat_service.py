@@ -1,0 +1,8 @@
+from agents.recruiter_agent import RecruiterAgent
+
+class ChatService:
+    def __init__(self):
+        self.agent = RecruiterAgent()
+
+    def get_response(self, query: str):
+        return self.agent.handle(query)
